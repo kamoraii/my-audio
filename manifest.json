@@ -1,0 +1,17 @@
+{
+  "name": "My Audio",
+  "short_name": "My Audio",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "description": "Nettoyage et analyse de fichiers audio",
+  "icons": [
+    {
+      "src": "icon.JPEG",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
