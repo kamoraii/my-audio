@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Analyser un audio - My Audio</title>
+
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="My Audio">
+    <link rel="apple-touch-icon" href="icon.JPEG">
+
+    <style>
+        :root {
+            --bg-deep: #1a1a2e;
+            --bg-card: #26264a;
+            --mauve: #b39ddb;
+            --rose: #f8bbd0;
+            --bleu-ciel: #90caf9;
+            --turquoise: #80deea;
+            --texte: #f0eefb;
+            --texte-doux: #b8b4d4;
+            --alerte: #ff8a80;
+            --ok: #80cbc4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; min-height: 100vh; min-height: 100dvh; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(160deg, #1a1a2e 0%, #1a2945 50%, #1f2a3e 100%);
+            background-attachment: fixed;
+            color: var(--texte);
+            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            margin: auto;
+            padding: 12px 0;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--texte-doux);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1.5px solid rgba(144, 202, 249, 0.3);
+            background: rgba(38, 38, 74, 0.6);
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            border-color: var(--bleu-ciel);
+            color: var(--bleu-ciel);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, var(--bleu-ciel), var(--turquoise));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--texte-doux);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .card {
+            background: rgba(38, 38, 74, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(144, 202, 249, 0.35);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-audio {
+            background: linear-gradient(135deg, var(--bleu-ciel), var(--turquoise));
+            border-color: var(--turquoise);
+            box-shadow: 0 4px 12px rgba(128, 222, 234, 0.25);
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, #90caf9, #64b5f6);
+            border-color: #64b5f6;
+            color: #0d1b2a;
+            margin-top: 16px;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--bleu-ciel);
+            border: 2px solid rgba(144, 202, 249, 0.5);
+            margin-top: 8px;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+        }
+
+        .btn:disabled {
+            background: #3a3a5a;
+            color: #6b6b8a;
+            border-color: #4a4a6a;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .file-info {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1.5px dashed rgba(144, 202, 249, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: var(--texte-doux);
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .file-info.active {
+            border-style: solid;
+            border-color: var(--turquoise);
+            color: var(--turquoise);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 10px;
+            color: var(--texte-doux);
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1.5px solid rgba(144, 202, 249, 0.2);
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #results {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1.5px solid rgba(144, 202, 249, 0.3);
+        }
+
+        .score-block {
+            margin-bottom: 20px;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--texte);
+        }
+
+        .score-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--bleu-ciel);
+        }
+
+        .score-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(144, 202, 249, 0.2);
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.6s ease;
+            background: linear-gradient(90deg, var(--bleu-ciel), var(--turquoise));
+        }
+
+        .score-bar-fill.high {
+            background: linear-gradient(90deg, #ff8a80, #ff5252);
+        }
+
+        .alert-banner {
+            display: none;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .alert-banner.warning {
+            background: rgba(255, 138, 128, 0.15);
+            border: 1.5px solid rgba(255, 138, 128, 0.6);
+            color: var(--alerte);
+        }
+
+        .alert-banner.safe {
+            background: rgba(128, 203, 196, 0.15);
+            border: 1.5px solid rgba(128, 203, 196, 0.6);
+            color: var(--ok);
+        }
+
+        .alert-banner.mixed {
+            background: rgba(255, 202, 40, 0.15);
+            border: 1.5px solid rgba(255, 202, 40, 0.6);
+            color: #ffd54f;
+        }
+
+        .hidden { display: none !important; }
+
+        .note {
+            margin-top: 16px;
+            font-size: 0.75rem;
+            color: var(--texte-doux);
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">← Retour</a>
+
+    <h1>Analyser un audio</h1>
+    <p class="subtitle">Détection de musique et voix générées par IA</p>
+
+    <div class="card">
+        <button class="btn btn-audio" id="pickAudioBtn">📁 Choisir un fichier audio</button>
+
+        <div class="file-info" id="fileInfo">Aucun fichier sélectionné</div>
+
+        <button class="btn btn-reset hidden" id="resetBtn">✖ Retirer le fichier</button>
+
+        <button class="btn btn-analyze" id="analyzeBtn" disabled>🔍 Lancer l'analyse</button>
+
+        <div id="status">Sélectionnez un fichier audio…</div>
+
+        <div id="results">
+            <div class="score-block">
+                <div class="score-header">
+                    <span class="score-label">Musique générée par IA</span>
+                    <span class="score-value" id="aiMusicScore">-</span>
+                </div>
+                <div class="score-bar-bg">
+                    <div class="score-bar-fill" id="aiMusicBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="score-block">
+                <div class="score-header">
+                    <span class="score-label">Voix générée par IA</span>
+                    <span class="score-value" id="aiSpeechScore">-</span>
+                </div>
+                <div class="score-bar-bg">
+                    <div class="score-bar-fill" id="aiSpeechBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="alert-banner" id="alertBannerEr"></div>
+        </div>
+    </div>
+
+   re <p class="note">Les fichiers neur sont pas conservés. Analyse via Sightengine serve.</p>
+
+    <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus" class="hidden">
+</div>
+
+<script>
+    const WORKER_URL = "https://curly-bush-ab90.henrygoss.workers.dev";
+    const MAX_FILE_SIZE = 80 * 1024 * 1024; // 80 Mo
+
+    const audioInput = document.getElementById('audioInput');
+    const pickAudioBtn = document.getElementById('pickAudioBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusDiv = document.getElementById('status');
+    const fileInfo = document.getElementById('fileInfo');
+    const resultsDiv = document.getElementById('results');
+    const aiMusicScore = document.getElementById('aiMusicScore');
+    const aiMusicBar = document.getElementById('aiMusicBar');
+    const aiSpeechScore = document.getElementById('aiSpeechScore');
+    const aiSpeechBar = document.getElementById('aiSpeechBar');
+    const alertBanner = document.getElementById('alertBanner');
+
+    pickAudioBtn.addEventListener('click', () => audioInput.click());
+
+    audioInput.addEventListener('change', () => {
+        const file = audioInput.files[0];
+        if (!file) return;
+
+        // Vérification de la taille
+        if (file.size > MAX_FILE_SIZE) {
+            statusDiv.textContent = `❌ Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). Max : 80 Mo.`;
+            fileInfo.textContent = "Aucun fichier sélectionné";
+            fileInfo.classList.remove('active');
+            analyzeBtn.disabled = true;
+            resetBtn.classList.add('hidden');
+            audioInput.value = '';
+            return;
+        }
+
+        fileInfo.textContent = `📎 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} Mo)`;
+        fileInfo.classList.add('active');
+        statusDiv.textContent = "Fichier prêt pour l'analyse.";
+        analyzeBtn.disabled = false;
+        resetBtn.classList.remove('hidden');
+        resultsDiv.style.display = 'none';
+    });
+
+    resetBtn.addEventListener('click', () => {
+        audioInput.value = '';
+        fileInfo.textContent = "Aucun fichier sélectionné";
+        fileInfo.classList.remove('active');
+        statusDiv.textContent = "Sélectionnez un fichier audio…";
+        analyzeBtn.disabled = true;
+        resetBtn.classList.add('hidden');
+        resultsDiv.style.display = 'none';
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+        const file = audioInput.files[0];
+        if (!file) return;
+
+        analyzeBtn.disabled = true;
+        resetBtn.classList.add('hidden');
+        statusDiv.textContent = "⏳ Envoi du fichier et analyse en cours…";
+        resultsDiv.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append("audio", file);
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                throw new Error("Réponse invalide du serveur.");
+            }
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error("Quota d'analyses dépassé pour ce mois.");
+                }
+                throw new Error(data.error || `ur (${response.status}).`);
+            }
+
+            const aiMusic = data.type?.ai_music ?? 0;
+            const aiSpeech = data.type?.ai_speech ?? 0;
+
+            const musicPercent = Math.round(aiMusic * 100);
+            const speechPercent = Math.round(aiSpeech * 100);
+
+            // Mise à jour des scores chiffrés
+            aiMusicScore.textContent = musicPercent + " %";
+            aiSpeechScore.textContent = speechPercent + " %";
+
+            // Mise à jour des barres visuelles
+            aiMusicBar.style.width = musicPercent + "%";
+            aiSpeechBar.style.width = speechPercent + "%";
+
+            // Couleur rouge si > 50%
+            if (musicPercent > 50) aiMusicBar.classList.add('high');
+            else aiMusicBar.classList.remove('high');
+
+            if (speechPercent > 50) aiSpeechBar.classList.add('high');
+            else aiSpeechBar.classList.remove('high');
+
+            // Seuil d'alerte
+            const musicHigh = musicPercent > 50;
+            const speechHigh = speechPercent > 50;
+
+            if (musicHigh && speechHigh) {
+                alertBanner.className = "alert-banner warning";
+                alertBanner.textContent = "⚠️ Probablement généré par IA (musique et voix)";
+                alertBanner.style.display = "block";
+            } else if (musicHigh || speechHigh) {
+                alertBanner.className = "alert-banner mixed";
+                alertBanner.textContent = musicHigh
+                    ? "⚠️ Musique probablement générée par IA"
+                    : "⚠️ Voix probablement générée par IA";
+                alertBanner.style.display = "block";
+            } else {
+                alertBanner.className = "alert-banner safe";
+                alertBanner.textContent = "✅ Aucun signal d'IA détecté de manière significative";
+                alertBanner.style.display = "block";
+            }
+
+            statusDiv.textContent = "";
+            resultsDiv.style.display = 'block';
+
+        } catch (err) {
+            statusDiv.textContent = "❌ " + err.message;
+            console.error(err);
+        } finally {
+            analyzeBtn.disabled = false;
+            resetBtn.classList.remove('hidden');
+        }
+    });
+</script>
+
+</body>
+</html>
