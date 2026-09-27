@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nettoyer un audio - My Audio</title>
+
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="My Audio">
+    <link rel="apple-touch-icon" href="icon.JPEG">
+
+    <style>
+        :root {
+            --bg-deep: #1a1a2e;
+            --bg-card: #26264a;
+            --mauve: #b39ddb;
+            --rose: #f8bbd0;
+            --bleu-ciel: #90caf9;
+            --turquoise: #80deea;
+            --texte: #f0eefb;
+            --texte-doux: #b8b4d4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; min-height: 100vh; min-height: 100dvh; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(160deg, #1a1a2e 0%, #2a1f45 50%, #1f2a3e 100%);
+            background-attachment: fixed;
+            color: var(--texte);
+            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            margin: auto;
+            padding: 12px 0;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--texte-doux);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1.5px solid rgba(179, 157, 219, 0.3);
+            background: rgba(38, 38, 74, 0.6);
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            border-color: var(--mauve);
+            color: var(--mauve);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, var(--mauve), var(--rose));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--texte-doux);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .card {
+            background: rgba(38, 38, 74, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(179, 157, 219, 0.35);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-audio {
+            background: linear-gradient(135deg, var(--mauve), var(--rose));
+            border-color: var(--rose);
+            box-shadow: 0 4px 12px rgba(248, 187, 208, 0.25);
+        }
+
+        .btn-photo {
+            background: linear-gradient(135deg, var(--bleu-ciel), var(--turquoise));
+            border-color: var(--turquoise);
+            box-shadow: 0 4px 12px rgba(128, 222, 234, 0.25);
+        }
+
+        .btn-process {
+            background: linear-gradient(135deg, #ce93d8, #9fa8da);
+            border-color: #ce93d8;
+            color: #1a1a2e;
+            margin-top: 16px;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(206, 147, 216, 0.3);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--rose);
+            border: 2px solid rgba(248, 187, 208, 0.5);
+            margin-top: 8px;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+        }
+
+        .btn:disabled {
+            background: #3a3a5a;
+            color: #6b6b8a;
+            border-color: #4a4a6a;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .file-info {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1.5px dashed rgba(179, 157, 219, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: var(--texte-doux);
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .file-info.active {
+            border-style: solid;
+            border-color: var(--turquoise);
+            color: var(--turquoise);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 10px;
+            color: var(--texte-doux);
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1.5px solid rgba(144, 202, 249, 0.2);
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden { display: none !important; }
+
+        .note {
+            margin-top: 16px;
+            font-size: 0.75rem;
+            color: var(--texte-doux);
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">← Retour</a>
+
+    <h1>Nettoyer un audio</h1>
+    <p class="subtitle">Nettoyage spectral extrême<br>Filtres ciblés + bruit + décalage</p>
+
+    <div class="card">
+        <button class="btn btn-audio" id="pickAudioBtn">📁 Fichiers</button>
+        <button class="btn btn-photo" id="pickVideoBtn">🖼️ Photothèque</button>
+
+        <div class="file-info" id="fileInfo">Aucun fichier sélectionné</div>
+
+        <button class="btn btn-reset hidden" id="resetBtn">✖ Retirer le fichier</button>
+
+        <button class="btn btn-process" id="processBtn" disabled>✨ Nettoyer et enregistrer (WAV)</button>
+
+        <div id="status">Sélectionnez un fichier audio ou vidéo…</div>
+    </div>
+
+    <p class="note">Traitement extrême : 7 filtres ciblés + bruit + décalage +1.2%. Sortie WAV uniquement.</p>
+
+    <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus,.wma,.aiff,.aif" class="hidden">
+    <input type="file" id="videoInput" accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.mp4,.mov,.m4v,.webm" class="hidden">
+</div>
+
+<script>
+    const audioInput = document.getElementById('audioInput');
+    const videoInput = document.getElementById('videoInput');
+    const pickAudioBtn = document.getElementById('pickAudioBtn');
+    const pickVideoBtn = document.getElementById('pickVideoBtn');
+    const processBtn = document.getElementById('processBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusDiv = document.getElementById('status');
+    const fileInfo = document.getElementById('fileInfo');
+
+    let audioBuffer = null;
+    let currentFileName = '';
+
+    pickAudioBtn.addEventListener('click', () => audioInput.click());
+    pickVideoBtn.addEventListener('click', () => videoInput.click());
+
+    async function handleFile(file) {
+        if (!file) return;
+        currentFileName = file.name;
+        fileInfo.textContent = `📎 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} Mo)`;
+        fileInfo.classList.add('active');
+        statusDiv.textContent = "Chargement du fichier…";
+        processBtn.disabled = true;
+        resetBtn.classList.remove('hidden');
+        audioBuffer = null;
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            statusDiv.textContent = "✅ Fichier prêt pour le nettoyage extrême.";
+            processBtn.disabled = false;
+        } catch (error) {
+            statusDiv.textContent = "❌ Impossible de lire ce fichier. Format non supporté.";
+            console.error(error);
+        }
+    }
+
+    audioInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    videoInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    resetBtn.addEventListener('click', () => {
+        audioBuffer = null;
+        currentFileName = '';
+        fileInfo.textContent = "Aucun fichier sélectionné";
+        fileInfo.classList.remove('active');
+        statusDiv.textContent = "Sélectionnez un fichier audio ou vidéo…";
+        processBtn.disabled = true;
+        resetBtn.classList.add('hidden');
+        audioInput.value = '';
+        videoInput.value = '';
+    });
+
+    processBtn.addEventListener('click', async () => {
+        if (!audioBuffer) return;
+        statusDiv.textContent = "⏳ Nettoyage extrême en cours…";
+        processBtn.disabled = true;
+
+        try {
+            const playbackRate = 1.012;
+            const targetSampleRate = audioBuffer.sampleRate;
+            const totalSamples = Math.floor(audioBuffer.length / playbackRate);
+
+            const offlineCtx = new OfflineAudioContext(
+                audioBuffer.numberOfChannels,
+                totalSamples,
+                targetSampleRate
+            );
+
+            const source = offlineCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.playbackRate.value = playbackRate;
+
+            let lastNode = source;
+
+            const sunoBands = [
+                { low: 19000, high: 20000 },
+                { low: 15000, high: 16000 },
+                { low: 8000, high: 8200 },
+                { low: 50, high: 150 },
+                { low: 12000, high: 12100 },
+                { low: 17500, high: 18500 },
+                { low: 22000, high: 23000 }
+            ];
+
+            for (const band of sunoBands) {
+                const centerFreq = (band.low + band.high) / 2;
+                const filter = offlineCtx.createBiquadFilter();
+                filter.type = 'notch';
+                filter.frequency.value = centerFreq;
+                filter.Q.value = 2;
+                lastNode.connect(filter);
+                lastNode = filter;
+            }
+
+            const lowpass = offlineCtx.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.value = 16000;
+            lastNode.connect(lowpass);
+            lastNode = lowpass;
+
+            lastNode.connect(offlineCtx.destination);
+            source.start(0);
+
+            const renderedBuffer = await offlineCtx.startRendering();
+            statusDiv.textContent = "💾 Génération du WAV nettoyé…";
+
+            const noiseBuffer = addNoise(renderedBuffer, 0.0003);
+            const wavBlob = bufferToWav(noiseBuffer);
+
+            const baseName = currentFileName.replace(/\.[^.]+$/, '');
+            const fileName = `${baseName}_nettoye.wav`;
+            const file = new File([wavBlob], fileName, { type: 'audio/wav' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: fileName,
+                        text: "Fichier audio nettoyé (mode extrême)"
+                    });
+                    statusDiv.textContent = "✅ Fichier partagé / enregistré.";
+                } catch (shareErr) {
+                    if (shareErr.name !== 'AbortError') {
+                        triggerDownload(wavBlob, fileName);
+                        statusDiv.textContent = "✅ Fichier téléchargé.";
+                    } else {
+                        statusDiv.textContent = "ℹ️ Partage annulé.";
+                    }
+                }
+            } else {
+                triggerDownload(wavBlob, fileName);
+                statusDiv.textContent = "✅ Fichier téléchargé.";
+            }
+        } catch (error) {
+            statusDiv.textContent = "❌ Erreur lors du traitement.";
+            console.error(error);
+        }
+
+        processBtn.disabled = false;
+    });
+
+    function addNoise(buffer, amount) {
+        const output = new AudioBuffer({
+            numberOfChannels: buffer.numberOfChannels,
+            length: buffer.length,
+            sampleRate: buffer.sampleRate
+        });
+
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+            const inputData = buffer.getChannelData(ch);
+            const outputData = output.getChannelData(ch);
+            for (let i = 0; i < inputData.length; i++) {
+                const noise = (Math.random() * 2 - 1) * amount;
+                outputData[i] = Math.max(-1, Math.min(1, inputData[i] + noise));
+            }
+        }
+        return output;
+    }
+
+    function triggerDownload(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function bufferToWav(buffer) {
+        let numOfChan = buffer.numberOfChannels,
+            length = buffer.length * numOfChan * 2 + 44,
+            bufferArr = new ArrayBuffer(length),
+            view = new DataView(bufferArr),
+            channels = [], i, sample,
+            offset = 0,
+            pos = 0;
+
+        function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+        function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+        setUint32(0x46464952);
+        setUint32(length - 8);
+        setUint32(0x45564157);
+        setUint32(0x20746d66);
+        setUint32(16);
+        setUint16(1);
+        setUint16(numOfChan);
+        setUint32(buffer.sampleRate);
+        setUint32(buffer.sampleRate * 2 * numOfChan);
+        setUint16(numOfChan * 2);
+        setUint16(16);
+        setUint32(0x61746164);
+        setUint32(length - pos - 4);
+
+        for (i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
+
+        while (pos < length) {
+            for (i = 0; i < numOfChan; i++) {
+                sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                view.setInt16(pos, sample, true);
+                pos += 2;
+            }
+            offset++;
+        }
+        return new Blob([bufferArr], { type: "audio/wav" });
+    }
+</script>
+
+</body>
+</html>
