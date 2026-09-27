@@ -1,7 +1,8 @@
-const CACHE_NAME = 'my-audio-v1';
+const CACHE_NAME = 'my-audio-v2';
 const urlsToCache = [
   './',
   './index.html',
+  './cleaner.html',
   './manifest.json',
   './icon.JPEG'
 ];
