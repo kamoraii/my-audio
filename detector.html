@@ -59,12 +59,6 @@
             border: 1.5px solid rgba(144, 202, 249, 0.3);
             background: rgba(38, 38, 74, 0.6);
             margin-bottom: 16px;
-            transition: all 0.2s ease;
-        }
-
-        .back-btn:hover {
-            border-color: var(--bleu-ciel);
-            color: var(--bleu-ciel);
         }
 
         h1 {
@@ -91,7 +85,7 @@
             border: 1.5px solid rgba(144, 202, 249, 0.35);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
 
         .btn {
@@ -106,13 +100,11 @@
             transition: all 0.2s ease;
             margin-bottom: 12px;
             color: #1a1a2e;
-            letter-spacing: 0.3px;
         }
 
         .btn-audio {
             background: linear-gradient(135deg, var(--bleu-ciel), var(--turquoise));
             border-color: var(--turquoise);
-            box-shadow: 0 4px 12px rgba(128, 222, 234, 0.25);
         }
 
         .btn-analyze {
@@ -121,7 +113,6 @@
             color: #0d1b2a;
             margin-top: 16px;
             margin-bottom: 0;
-            box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
         }
 
         .btn-reset {
@@ -138,9 +129,7 @@
             background: #3a3a5a;
             color: #6b6b8a;
             border-color: #4a4a6a;
-            box-shadow: none;
             cursor: not-allowed;
-            transform: none;
         }
 
         .file-info {
@@ -183,9 +172,7 @@
             border-top: 1.5px solid rgba(144, 202, 249, 0.3);
         }
 
-        .score-block {
-            margin-bottom: 20px;
-        }
+        .score-block { margin-bottom: 20px; }
 
         .score-header {
             display: flex;
@@ -194,17 +181,8 @@
             margin-bottom: 8px;
         }
 
-        .score-label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--texte);
-        }
-
-        .score-value {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--bleu-ciel);
-        }
+        .score-label { font-size: 0.9rem; font-weight: 600; }
+        .score-value { font-size: 1rem; font-weight: 700; color: var(--bleu-ciel); }
 
         .score-bar-bg {
             width: 100%;
@@ -296,28 +274,18 @@
                 </div>
             </div>
 
-            <div class="score-block">
-                <div class="score-header">
-                    <span class="score-label">Voix générée par IA</span>
-                    <span class="score-value" id="aiSpeechScore">-</span>
-                </div>
-                <div class="score-bar-bg">
-                    <div class="score-bar-fill" id="aiSpeechBar" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div class="alert-banner" id="alertBannerEr"></div>
+            <div class="alert-banner" id="alertBanner"></div>
         </div>
     </div>
 
-   re <p class="note">Les fichiers neur sont pas conservés. Analyse via Sightengine serve.</p>
+    <p class="note">Les fichiers ne sont pas conservés. Analyse via Sightengine.</p>
 
     <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus" class="hidden">
 </div>
 
 <script>
     const WORKER_URL = "https://curly-bush-ab90.henrygoss.workers.dev";
-    const MAX_FILE_SIZE = 80 * 1024 * 1024; // 80 Mo
+    const MAX_FILE_SIZE = 80 * 1024 * 1024;
 
     const audioInput = document.getElementById('audioInput');
     const pickAudioBtn = document.getElementById('pickAudioBtn');
@@ -328,8 +296,6 @@
     const resultsDiv = document.getElementById('results');
     const aiMusicScore = document.getElementById('aiMusicScore');
     const aiMusicBar = document.getElementById('aiMusicBar');
-    const aiSpeechScore = document.getElementById('aiSpeechScore');
-    const aiSpeechBar = document.getElementById('aiSpeechBar');
     const alertBanner = document.getElementById('alertBanner');
 
     pickAudioBtn.addEventListener('click', () => audioInput.click());
@@ -338,7 +304,6 @@
         const file = audioInput.files[0];
         if (!file) return;
 
-        // Vérification de la taille
         if (file.size > MAX_FILE_SIZE) {
             statusDiv.textContent = `❌ Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). Max : 80 Mo.`;
             fileInfo.textContent = "Aucun fichier sélectionné";
@@ -373,16 +338,21 @@
 
         analyzeBtn.disabled = true;
         resetBtn.classList.add('hidden');
-        statusDiv.textContent = "⏳ Envoi du fichier et analyse en cours…";
+        statusDiv.textContent = "⏳ Analyse en cours…";
         resultsDiv.style.display = 'none';
 
-        const formData = new FormData();
-        formData.append("audio", file);
-
         try {
+            // Envoi du fichier brut (pas de FormData)
+            const arrayBuffer = await file.arrayBuffer();
+
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'X-Filename': file.name,
+                    'X-Filetype': file.type || 'audio/mpeg',
+                    'Content-Type': 'application/octet-stream'
+                },
+                body: arrayBuffer
             });
 
             let data;
@@ -396,45 +366,29 @@
                 if (response.status === 429) {
                     throw new Error("Quota d'analyses dépassé pour ce mois.");
                 }
-                throw new Error(data.error || `ur (${response.status}).`);
+                throw new Error(data.error || `Erreur serveur (${response.status}).`);
             }
 
-            const aiMusic = data.type?.ai_music ?? 0;
-            const aiSpeech = data.type?.ai_speech ?? 0;
+            // Extraire le score ai_music
+            let aiMusic = 0;
+            if (data.type && data.type.ai_music !== undefined) {
+                aiMusic = data.type.ai_music;
+            } else if (data.ai_music !== undefined) {
+                aiMusic = data.ai_music;
+            }
 
             const musicPercent = Math.round(aiMusic * 100);
-            const speechPercent = Math.round(aiSpeech * 100);
 
-            // Mise à jour des scores chiffrés
             aiMusicScore.textContent = musicPercent + " %";
-            aiSpeechScore.textContent = speechPercent + " %";
-
-            // Mise à jour des barres visuelles
             aiMusicBar.style.width = musicPercent + "%";
-            aiSpeechBar.style.width = speechPercent + "%";
 
-            // Couleur rouge si > 50%
-            if (musicPercent > 50) aiMusicBar.classList.add('high');
-            else aiMusicBar.classList.remove('high');
-
-            if (speechPercent > 50) aiSpeechBar.classList.add('high');
-            else aiSpeechBar.classList.remove('high');
-
-            // Seuil d'alerte
-            const musicHigh = musicPercent > 50;
-            const speechHigh = speechPercent > 50;
-
-            if (musicHigh && speechHigh) {
+            if (musicPercent > 50) {
+                aiMusicBar.classList.add('high');
                 alertBanner.className = "alert-banner warning";
-                alertBanner.textContent = "⚠️ Probablement généré par IA (musique et voix)";
-                alertBanner.style.display = "block";
-            } else if (musicHigh || speechHigh) {
-                alertBanner.className = "alert-banner mixed";
-                alertBanner.textContent = musicHigh
-                    ? "⚠️ Musique probablement générée par IA"
-                    : "⚠️ Voix probablement générée par IA";
+                alertBanner.textContent = "⚠️ Musique probablement générée par IA";
                 alertBanner.style.display = "block";
             } else {
+                aiMusicBar.classList.remove('high');
                 alertBanner.className = "alert-banner safe";
                 alertBanner.textContent = "✅ Aucun signal d'IA détecté de manière significative";
                 alertBanner.style.display = "block";
